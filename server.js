@@ -1,34 +1,38 @@
 const express = require("express");
-const pdf = require("html-pdf");
+const puppeteer = require("puppeteer");
+const bodyParser = require("body-parser");
+
 const app = express();
+const port = 3000;
 
-// Middleware to parse JSON data
-app.use(express.json());
+app.use(bodyParser.json());
 
-// API endpoint to convert HTML to PDF
-app.post("/convert-html-to-pdf", (req, res) => {
-  const htmlContent = req.body.html; // Get the HTML content from the request body
+app.post("/convert-html-to-pdf", async (req, res) => {
+  const { html } = req.body;
 
-  if (!htmlContent) {
-    return res
-      .status(400)
-      .json({ error: "Missing HTML content in the request." });
-  }
+  try {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
 
-  // Options for the pdf.create function (adjust as needed)
-  const options = { format: "Letter" };
+    // Set the content of the page to the provided HTML
+    await page.setContent(html);
 
-  pdf.create(htmlContent, options).toBuffer((err, buffer) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: "PDF generation failed." });
-    }
+    // Generate a PDF from the page
+    const pdfBuffer = await page.pdf({ format: "A4" });
 
-    // Set the response headers to indicate a PDF file
+    // Close the browser
+    await browser.close();
+
+    // Set response headers for PDF
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", "inline; filename=converted.pdf");
-    res.send(buffer);
-  });
+    res.setHeader("Content-Disposition", 'attachment; filename="output.pdf"');
+
+    // Send the PDF buffer as the response
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error generating PDF");
+  }
 });
 
 // Route to serve an HTML form for testing
@@ -44,8 +48,6 @@ app.get("/", (req, res) => {
   res.send(htmlForm);
 });
 
-// Start the Express server
-const port = process.env.PORT || 3000; // Use your preferred port number
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
