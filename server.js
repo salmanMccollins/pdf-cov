@@ -11,7 +11,7 @@ app.post("/convert-html-to-pdf", async (req, res) => {
   const { html } = req.body;
 
   try {
-    const browser = await puppeteer.launch({ headless: "new" });
+    const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
 
     // Set the content of the page to the provided HTML
