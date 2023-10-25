@@ -3,7 +3,7 @@ const puppeteer = require("puppeteer");
 const bodyParser = require("body-parser");
 
 const app = express();
-const port = 3000;
+const port = 3006;
 
 app.use(bodyParser.json());
 
@@ -11,7 +11,7 @@ app.post("/convert-html-to-pdf", async (req, res) => {
   const { html } = req.body;
 
   try {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({ headless: "new" });
     const page = await browser.newPage();
 
     // Set the content of the page to the provided HTML
